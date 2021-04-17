@@ -1,0 +1,95 @@
+import discord
+from discord.ext import commands
+from discord.ext.commands import Bot, has_guild_permissions
+import praw
+import random
+client = commands.Bot(command_prefix="", intents = discord.Intents.all())
+reddit = praw.Reddit(username = "MrVampire1026",
+                     password = "pQrBxR&8NRYQ@Q3",
+                     client_id = "utF58JL6jWx56Q",
+                     client_secret = "iO7lG4_ufyhIqJsw_-zjRmDn7I56hg",
+                     user_agent = "CHANGE!")
+
+@client.command()
+async def meme(ctx, subred = "memes"):
+    subreddit = reddit.subreddit(subred)
+    all_subs = []
+    top = subreddit.top(limit=100)
+
+    for submissions in top:
+        all_subs.append(submissions)
+    random_sub = random.choice(all_subs)
+
+    name = random_sub.title
+    url_sub = random_sub.url
+
+    em = discord.Embed(title=name)
+    em.set_image(url=url_sub)
+    await ctx.send(embed= em)
+
+@client.event
+async def on_ready():
+    print("Bot is READY")
+
+@client.command()
+async def  hello(ctx):
+    await ctx.send("Hello I am the Super Embedder, I was devloped by Mr. Crazy Vampire")
+
+@client.command()
+async def rules(ctx):
+    await ctx.send(":no_entry_sign: :regional_indicator_r: :regional_indicator_u: :regional_indicator_l: :regional_indicator_e: :regional_indicator_s:\n \n:regional_indicator_j: :regional_indicator_u: :regional_indicator_s: :regional_indicator_t:\n \n :regional_indicator_d: :regional_indicator_o: :regional_indicator_n: :regional_indicator_t:\n \n:regional_indicator_s: :regional_indicator_p: :regional_indicator_a: :regional_indicator_m:")
+
+@client.command()
+async def delete(ctx, amount=3):
+    if commands.has_permissions(manage_messages=True):
+        await ctx.channel.purge(limit = amount+1)
+    elif commands.has_permissions(manage_messages=False):
+        await ctx.send("You need to get a promotion")
+
+
+@client.command()
+async def whois(ctx, member : discord.Member):
+    embed = discord.Embed(title=member.name, description= member.mention, color=discord.Color.red())
+    embed.add_field(name="ID", value=member.id, inline=True)
+    embed.set_thumbnail(url=member.avatar_url)
+    embed.set_footer(icon_url= ctx.author.avatar_url, text=f"requested by {ctx.author}")
+    await ctx.send(embed=embed)
+
+
+@client.command()
+async def kick(ctx, member : discord.Member, *, reason="Just wanted to"):
+    if ctx.author.guild_permissions.kick_members:
+        await member.kick(reason=reason)
+        try:
+            await member.send("you have been kicked due to \n"+ reason)
+        except:
+            await ctx.send(member+" has there dm closed")
+    elif not ctx.author.guild_permissions.kick_members:
+        await ctx.send("You need to get a promotion")
+
+@client.command()
+async def ban(ctx, member: discord.Member, *, reason="Just wanted to"):
+    if ctx.author.guild_permissions.ban_members:
+        await member.ban(reason=reason)
+        await ctx.send(member+"has been banned")
+        try:
+            await member.send("you have been kicked due to \n"+ reason)
+        except:
+            await ctx.send(member+" has there dm closed")
+    elif not ctx.author.guild_permissions.kick_members:
+        await ctx.send("You need to get a promotion")
+
+@client.command()
+@commands.has_permissions(ban_members=True)
+async def unban(ctx, *, member):
+    banned_users = await ctx.guild.bans()
+    member_name , member_disc = member.split("#")
+
+    for banned_entry in banned_users:
+        user = banned_entry.user
+        if (user.name, user.discriminator) == (member_name, member_disc):
+            await ctx.guild.unban(user)
+            await ctx.send(member + "has been unbanned")
+            return
+    await ctx.send(member+"not found")
+client.run(ToKeN)
